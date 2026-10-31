@@ -18,6 +18,31 @@
 
 ---
 
+## 🎯 Mode Selection Guide (Based on Phone Wattage)
+
+To avoid charging handshake crashes (such as the slow-charging bug on 18W/33W devices) and prevent excessive heat, select the mode that matches your phone's hardware wattage:
+
+| Device Wattage Tier | Example Devices | Recommended Mode | Current Target | Description & Instructions |
+| :--- | :--- | :--- | :--- | :--- |
+| 🚀 **67W / 90W / 120W** | POCO F-Series (F4/F5/F6/F7), Redmi K-Series, Xiaomi Flagships | ⚡ **Ultra Turbo Mode** | `6.0A` (Max) | Delivers peak turbo wattage. **Peltier phone cooler recommended** for sustained 0–80% turbo speed without thermal stepping. |
+| ⚖️ **33W / 45W** | Redmi Note 10/11/12/13 Pro, POCO X-Series | ⚖️ **Balanced Mode** | `4.5A` | Optimal daily fast charging. Perfectly matches the 33W–45W hardware current envelope without heating. |
+| 🛡️ **18W / 22.5W** | Redmi 9T, Redmi 9/10/12/13C, POCO M-Series | 🛡️ **Eco Mode** | `2.5A` | **Crucial for budget phones!** Prevents Qualcomm PM6115 driver overload and stops the phone from dropping into slow 500mA charging. |
+| 🎮 **All Devices (Gaming)** | Any Xiaomi / POCO phone during gaming | 🎮 **Gaming Bypass Mode** | `0.5A` (Idle) | Powers the phone during gaming without pumping excess heat into the battery. |
+| 🔄 **All Devices (Default)**| Any phone with dynamic daily needs | 🔄 **Auto Governor** | `Dynamic` | Automatically scales between 2.0A and 6.0A across a multi-tier thermal ladder. |
+
+---
+
+## 💡 Solved Issues (Compared to Upstream Hyper-Charging-Plus)
+
+1. **Fixed "Slow Charging" on 18W Devices (Issue #2):**
+   * *Problem:* Upstream scripts forced a flat 6A request on all devices, causing budget PMICs (like Qualcomm PM6115 on Redmi 9T) to reject the handshake and fall back to slow 500mA trickle charging.
+   * *Solution:* HyperCharge Control Hub lets budget device users select **Eco Mode (2.5A)** or **Balanced Mode (4.5A)**, ensuring clean negotiation at the device's actual maximum speed.
+2. **Fixed 45°C Overheating Bug (Issue #3):**
+   * *Problem:* Aggressive loops on uncalibrated kernels occasionally pushed current past 45°C.
+   * *Solution:* Our governor enforces a **42°C Hard Thermal Ceiling** that immediately cuts current to 2.0A whenever battery temperatures exceed safe thresholds.
+
+---
+
 ## 📱 Hardware & Device Compatibility
 
 * **🟢 Xiaomi & POCO Snapdragon Devices — 100% Supersonic Working:**
