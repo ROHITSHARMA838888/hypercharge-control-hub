@@ -2,7 +2,6 @@ package com.rohit.hypercharge.ui.screens
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -69,12 +68,12 @@ fun AboutDialog(onDismiss: () -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Person, contentDescription = null, tint = CyanAccent, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Application & Rebuild Developer", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = CyanAccent)
+                            Text("Application Creator & Developer", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = CyanAccent)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text("Rohit Sharma", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                         Text(
-                            "Designed and programmed the HyperCharge Control Hub companion app and enhanced the KernelSU multi-mode fast charging governor.",
+                            "Developed and built this complete manual controller app from scratch. Designed specifically to give users instant mode toggling, real-time telemetry, and hardware-level manual charging control for the KernelSU module.",
                             fontSize = 12.sp,
                             color = TextSecondary,
                             lineHeight = 16.sp
@@ -104,12 +103,12 @@ fun AboutDialog(onDismiss: () -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Code, contentDescription = null, tint = ElectricBlue, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Original KernelSU Base Credit", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = ElectricBlue)
+                            Text("Original Kernel Module Base", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = ElectricBlue)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text("Demonx4y (Hyper-Charging-Plus)", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                         Text(
-                            "Original open-source thermal governor and sysfs management base. Rebuilt and enhanced by Rohit Sharma to add manual app hooks and universal safe-mode checks.",
+                            "Original open-source KernelSU fast-charging engine. This app was built by Rohit Sharma to serve as the official manual controller and live monitoring system for this module.",
                             fontSize = 12.sp,
                             color = TextSecondary,
                             lineHeight = 16.sp
@@ -129,7 +128,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Section 3: Hardware Support Matrix
+                // Section 3: Hardware Compatibility Matrix
                 Surface(
                     color = DarkSurfaceVariant,
                     shape = RoundedCornerShape(12.dp),
@@ -142,12 +141,12 @@ fun AboutDialog(onDismiss: () -> Unit) {
                             Text("Device Compatibility Matrix", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = NeonGreen)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("🟢 Xiaomi Snapdragon: 100% Working", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = NeonGreen)
-                        Text("Optimized for POCO F-series (F3 to F7) and high-speed fast charging Qualcomm devices on AOSP.", fontSize = 11.sp, color = TextSecondary)
+                        Text("🟢 Xiaomi & POCO Snapdragon: 100% Supersonic Working", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = NeonGreen)
+                        Text("Fully functional across all Xiaomi, Redmi, and POCO devices running Qualcomm Snapdragon processors with Fast Charging support. Zero throttle, maximum speed.", fontSize = 11.sp, color = TextSecondary)
 
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text("🟡 Xiaomi MediaTek: Partial Support", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = WarningOrange)
-                        Text("Basic thermal ladder works. Features safe node detection—if a node is missing, it skips it cleanly without crashing.", fontSize = 11.sp, color = TextSecondary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("🟡 Xiaomi & POCO MediaTek: Partial Support", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = WarningOrange)
+                        Text("Supported where kernel power nodes are exposed. Features intelligent safe fallback—will never crash or reboot your phone if a node is missing.", fontSize = 11.sp, color = TextSecondary)
                     }
                 }
             }

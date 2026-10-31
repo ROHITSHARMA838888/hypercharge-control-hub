@@ -4,7 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -48,7 +46,7 @@ fun DashboardScreen() {
     var updateStatus by remember { mutableStateOf<UpdateStatus>(UpdateStatus.Idle) }
     var showUpdateDialog by remember { mutableStateOf(false) }
 
-    // Live Polling Loop
+    // Live Telemetry Polling Loop
     LaunchedEffect(Unit) {
         isRootGranted = RootShell.isRootAvailable()
         currentMode = RootShell.getCurrentMode()
@@ -71,7 +69,7 @@ fun DashboardScreen() {
                             color = TextPrimary
                         )
                         Text(
-                            "Enhanced by Rohit Sharma",
+                            "Built by Rohit Sharma • Manual Controller",
                             fontSize = 11.sp,
                             color = CyanAccent,
                             fontWeight = FontWeight.Medium
@@ -129,7 +127,7 @@ fun DashboardScreen() {
                             Icon(Icons.Default.Warning, contentDescription = null, tint = DangerRed)
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                "Root access not detected. Please grant root in KernelSU / Magisk to apply modes.",
+                                "Root access required. Please grant root in KernelSU / Magisk to apply manual charging modes.",
                                 fontSize = 12.sp,
                                 color = TextPrimary
                             )
@@ -181,7 +179,6 @@ fun DashboardScreen() {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // Temperature Pill
                             val tempColor = when {
                                 batteryStats.temperatureCelsius < 36f -> NeonGreen
                                 batteryStats.temperatureCelsius < 41f -> WarningOrange
@@ -194,7 +191,6 @@ fun DashboardScreen() {
                                 color = tempColor
                             )
 
-                            // Current Pill
                             StatPill(
                                 label = "Current Flow",
                                 value = if (batteryStats.currentMilliAmps > 0) "${batteryStats.currentMilliAmps} mA" else "--",
@@ -202,7 +198,6 @@ fun DashboardScreen() {
                                 color = CyanAccent
                             )
 
-                            // Voltage Pill
                             StatPill(
                                 label = "Voltage",
                                 value = if (batteryStats.voltageVolts > 0) String.format("%.2f V", batteryStats.voltageVolts) else "--",
@@ -268,7 +263,6 @@ fun DashboardScreen() {
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Mode Icon
                         val icon = when (mode) {
                             ChargeMode.TURBO -> Icons.Default.FlashOn
                             ChargeMode.BALANCED -> Icons.Default.Balance
@@ -311,7 +305,6 @@ fun DashboardScreen() {
                             )
                         }
 
-                        // Selected Radio / Check
                         if (isSelected) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,

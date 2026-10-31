@@ -1,6 +1,7 @@
 package com.rohit.hypercharge.ui.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -90,7 +91,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
 
             // Subtitle with Rohit Sharma Credit
             Text(
-                text = "⚡ Enhanced & Built by Rohit Sharma",
+                text = "⚡ Developed & Built by Rohit Sharma",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = CyanAccent,
@@ -103,10 +104,10 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             Surface(
                 color = DarkSurfaceVariant,
                 shape = RoundedCornerShape(20.dp),
-                border = ButtonDefaults.outlinedButtonBorder
+                border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.4f))
             ) {
                 Text(
-                    text = "Built for Control: Hyper Charging+ [Rohit Rebuild]",
+                    text = "Official Manual Controller for Hyper-Charging-Plus",
                     fontSize = 11.sp,
                     color = TextSecondary,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
@@ -122,16 +123,16 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "App Developed by Rohit Sharma",
+                text = "App Built from Scratch by Rohit Sharma",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                color = TextPrimary.copy(alpha = 0.85f)
+                color = TextPrimary.copy(alpha = 0.9f)
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "KernelSU Module Base: Demonx4y",
+                text = "Built to manually control Demonx4y's Kernel Module",
                 fontSize = 11.sp,
-                color = TextSecondary.copy(alpha = 0.7f)
+                color = TextSecondary.copy(alpha = 0.75f)
             )
         }
     }
