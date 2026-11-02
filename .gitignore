@@ -6,5 +6,8 @@
 /build/
 app/build/
 build/
+dist/
 *.apk
 *.aab
+*.zip
+.apk_installed_stamp

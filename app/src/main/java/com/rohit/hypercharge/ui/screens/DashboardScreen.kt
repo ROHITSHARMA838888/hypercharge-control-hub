@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +28,7 @@ import com.rohit.hypercharge.updater.AppUpdater
 import com.rohit.hypercharge.updater.UpdateStatus
 import com.rohit.hypercharge.util.BatteryStats
 import com.rohit.hypercharge.util.ChargeMode
+import com.rohit.hypercharge.util.NotificationHelper
 import com.rohit.hypercharge.util.RootShell
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -40,20 +40,26 @@ fun DashboardScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     var batteryStats by remember { mutableStateOf(BatteryStats()) }
-    var currentMode by remember { mutableStateOf(ChargeMode.AUTO) }
+    var currentMode by remember { mutableStateOf(ChargeMode.MODE_8A) }
     var isRootGranted by remember { mutableStateOf(true) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var updateStatus by remember { mutableStateOf<UpdateStatus>(UpdateStatus.Idle) }
     var showUpdateDialog by remember { mutableStateOf(false) }
 
-    // Live Telemetry Polling Loop
+    // Real-Time Battery & Hardware Polling Loop (1000ms Real-Time updates)
     LaunchedEffect(Unit) {
         isRootGranted = RootShell.isRootAvailable()
         currentMode = RootShell.getCurrentMode()
+        RootShell.ensurePermissionsAndDaemon(context)
 
         while (true) {
-            batteryStats = RootShell.readBatteryStats()
-            delay(2000)
+            batteryStats = RootShell.readBatteryStats(context)
+            if (batteryStats.isCharging) {
+                NotificationHelper.showChargingNotification(context, batteryStats, currentMode)
+            } else {
+                NotificationHelper.dismissNotification(context)
+            }
+            delay(1000)
         }
     }
 
@@ -69,7 +75,7 @@ fun DashboardScreen() {
                             color = TextPrimary
                         )
                         Text(
-                            "Built by Rohit Sharma • Manual Controller",
+                            "Built by Rohit Sharma • Build 8 Controller",
                             fontSize = 11.sp,
                             color = CyanAccent,
                             fontWeight = FontWeight.Medium
@@ -164,17 +170,105 @@ fun DashboardScreen() {
                                     color = if (batteryStats.isCharging) NeonGreen else TextSecondary
                                 )
                             }
-                            Text(
-                                text = "${batteryStats.percentage}%",
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = CyanAccent
-                            )
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (batteryStats.wattageWatts > 0f) {
+                                    Surface(
+                                        color = CyanAccent.copy(alpha = 0.15f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            text = String.format(java.util.Locale.US, "%.1f W", batteryStats.wattageWatts),
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = CyanAccent,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                }
+                                Text(
+                                    text = "${batteryStats.percentage}%",
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = CyanAccent
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Stats Grid (Temp, Current, Voltage)
+                        // Real-Time High-Impact Amperage & Wattage Flow Card
+                        Surface(
+                            color = DarkSurfaceVariant,
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "REAL-TIME FLOW",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextSecondary
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Row(verticalAlignment = Alignment.Bottom) {
+                                        Text(
+                                            text = if (batteryStats.currentMilliAmps > 0)
+                                                String.format(java.util.Locale.US, "%.2f A", batteryStats.currentAmperes)
+                                            else "-- A",
+                                            fontSize = 24.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (batteryStats.currentAmperes >= 7.8f) WarningOrange else CyanAccent
+                                        )
+                                        if (batteryStats.currentMilliAmps > 0) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "${batteryStats.currentMilliAmps} mA",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = TextSecondary,
+                                                modifier = Modifier.padding(bottom = 3.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (batteryStats.wattageWatts > 0f) {
+                                    Surface(
+                                        color = (if (batteryStats.wattageWatts >= 28f) WarningOrange else CyanAccent).copy(alpha = 0.18f),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                            horizontalAlignment = Alignment.End
+                                        ) {
+                                            Text(
+                                                text = String.format(java.util.Locale.US, "%.1f W", batteryStats.wattageWatts),
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (batteryStats.wattageWatts >= 28f) WarningOrange else CyanAccent
+                                            )
+                                            Text(
+                                                text = "POWER FLOW",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (batteryStats.wattageWatts >= 28f) WarningOrange else CyanAccent
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Stats Grid (Temp, Amperage, Voltage)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -192,15 +286,17 @@ fun DashboardScreen() {
                             )
 
                             StatPill(
-                                label = "Current Flow",
-                                value = if (batteryStats.currentMilliAmps > 0) "${batteryStats.currentMilliAmps} mA" else "--",
+                                label = "Amperage Flow",
+                                value = if (batteryStats.currentMilliAmps > 0)
+                                    String.format(java.util.Locale.US, "%.2f A", batteryStats.currentAmperes)
+                                else "--",
                                 icon = Icons.Default.ElectricBolt,
-                                color = CyanAccent
+                                color = if (batteryStats.currentAmperes >= 7.8f) WarningOrange else CyanAccent
                             )
 
                             StatPill(
                                 label = "Voltage",
-                                value = if (batteryStats.voltageVolts > 0) String.format("%.2f V", batteryStats.voltageVolts) else "--",
+                                value = if (batteryStats.voltageVolts > 0) String.format(java.util.Locale.US, "%.2f V", batteryStats.voltageVolts) else "--",
                                 icon = Icons.Default.Speed,
                                 color = ElectricBlue
                             )
@@ -209,7 +305,153 @@ fun DashboardScreen() {
                 }
             }
 
-            // Section Header: Mode Selector
+            // Master Engine Status Card (Active vs Stock Revert)
+            item {
+                val isEngineDisabled = currentMode == ChargeMode.STOCK
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isEngineDisabled) DangerRed.copy(alpha = 0.18f) else DarkSurface
+                    ),
+                    border = BorderStroke(
+                        1.5.dp,
+                        if (isEngineDisabled) DangerRed else TextSecondary.copy(alpha = 0.2f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val newMode = if (isEngineDisabled) ChargeMode.MODE_8A else ChargeMode.STOCK
+                            currentMode = newMode
+                            coroutineScope.launch {
+                                RootShell.applyMode(newMode)
+                                val msg = if (newMode == ChargeMode.STOCK)
+                                    "🛑 Engine Disabled! Reverted to Stock Control."
+                                else
+                                    "✔ 8 Ampere Turbo Engine Activated!"
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isEngineDisabled) DangerRed.copy(alpha = 0.25f) else NeonGreen.copy(alpha = 0.15f)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isEngineDisabled) Icons.Default.Block else Icons.Default.PowerSettingsNew,
+                                    contentDescription = null,
+                                    tint = if (isEngineDisabled) DangerRed else NeonGreen
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column {
+                                Text(
+                                    text = if (isEngineDisabled) "Engine Status: STOCK (OFF)" else "Engine Status: ACTIVE",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isEngineDisabled) DangerRed else NeonGreen
+                                )
+                                Text(
+                                    text = if (isEngineDisabled) "Stock charging in control • Tap to activate Turbo" else "Tap to turn OFF all overrides & revert to stock",
+                                    fontSize = 11.sp,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = !isEngineDisabled,
+                            onCheckedChange = { isChecked ->
+                                val target = if (isChecked) ChargeMode.MODE_8A else ChargeMode.STOCK
+                                currentMode = target
+                                coroutineScope.launch {
+                                    RootShell.applyMode(target)
+                                    Toast.makeText(context, if (isChecked) "8A Engine Activated" else "Stock Revert Activated", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = DarkBg,
+                                checkedTrackColor = NeonGreen,
+                                uncheckedThumbColor = TextSecondary,
+                                uncheckedTrackColor = DarkSurfaceVariant
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Notification Center Indicator
+            item {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                    border = BorderStroke(1.dp, if (batteryStats.isCharging) NeonGreen.copy(alpha = 0.35f) else TextSecondary.copy(alpha = 0.15f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background((if (batteryStats.isCharging) NeonGreen else CyanAccent).copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.NotificationsActive,
+                                    contentDescription = null,
+                                    tint = if (batteryStats.isCharging) NeonGreen else CyanAccent
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column {
+                                Text(
+                                    text = "Notification Center: Dual-Engine (Build 8)",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = if (batteryStats.isCharging) "⚡ Live charging panel active in status bar" else "Automatically appears when charger is plugged in",
+                                    fontSize = 11.sp,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+                        Surface(
+                            color = (if (batteryStats.isCharging) NeonGreen else TextSecondary).copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = if (batteryStats.isCharging) "● LIVE AUTO" else "AUTO STANDBY",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (batteryStats.isCharging) NeonGreen else TextSecondary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Section Header: Dedicated Mode Selection
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -217,7 +459,7 @@ fun DashboardScreen() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Governor Mode Switch",
+                        "Governor Mode Switch (Strict 6A - 8A Band)",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -231,28 +473,33 @@ fun DashboardScreen() {
                 }
             }
 
-            // List of Interactive Mode Cards
-            items(ChargeMode.entries) { mode ->
-                val isSelected = currentMode == mode
+            // =========================================================================
+            // BUTTON 1: 8 Ampere Turbo (30W - 32W) - Strict Upper Ceiling Cap (Never > 8A)
+            // =========================================================================
+            item {
+                val isSelected = currentMode == ChargeMode.MODE_8A
                 val borderColor by animateColorAsState(
-                    targetValue = if (isSelected) CyanAccent else Color.Transparent,
-                    label = "border"
+                    targetValue = if (isSelected) WarningOrange else Color.Transparent,
+                    label = "border8A"
                 )
 
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) DarkSurfaceVariant else DarkSurface
+                        containerColor = if (isSelected) WarningOrange.copy(alpha = 0.16f) else DarkSurface
                     ),
-                    border = BorderStroke(1.5.dp, borderColor),
+                    border = BorderStroke(2.dp, if (isSelected) WarningOrange else TextSecondary.copy(alpha = 0.15f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            currentMode = mode
+                            currentMode = ChargeMode.MODE_8A
                             coroutineScope.launch {
-                                val success = RootShell.applyMode(mode)
+                                val success = RootShell.applyMode(ChargeMode.MODE_8A)
                                 if (success) {
-                                    Toast.makeText(context, "${mode.title} Activated!", Toast.LENGTH_SHORT).show()
+                                    if (batteryStats.isCharging) {
+                                        NotificationHelper.showChargingNotification(context, batteryStats, ChargeMode.MODE_8A)
+                                    }
+                                    Toast.makeText(context, "⚡ 8 Ampere Turbo Activated!", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -260,46 +507,137 @@ fun DashboardScreen() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(18.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val icon = when (mode) {
-                            ChargeMode.TURBO -> Icons.Default.FlashOn
-                            ChargeMode.BALANCED -> Icons.Default.Balance
-                            ChargeMode.ECO -> Icons.Default.Eco
-                            ChargeMode.BYPASS -> Icons.Default.Gamepad
-                            ChargeMode.AUTO -> Icons.Default.Autorenew
-                        }
-                        val iconColor = when (mode) {
-                            ChargeMode.TURBO -> WarningOrange
-                            ChargeMode.BALANCED -> CyanAccent
-                            ChargeMode.ECO -> NeonGreen
-                            ChargeMode.BYPASS -> ElectricBlue
-                            ChargeMode.AUTO -> CyanAccent
-                        }
-
                         Box(
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(46.dp)
                                 .clip(CircleShape)
-                                .background(iconColor.copy(alpha = 0.15f)),
+                                .background(WarningOrange.copy(alpha = 0.2f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(icon, contentDescription = null, tint = iconColor)
+                            Icon(Icons.Default.ElectricBolt, contentDescription = null, tint = WarningOrange, modifier = Modifier.size(26.dp))
                         }
 
                         Spacer(modifier = Modifier.width(14.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "8 Ampere Turbo",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) WarningOrange else TextPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    color = WarningOrange.copy(alpha = 0.25f),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        "8.0A CONSTANT",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = WarningOrange,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = mode.title,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isSelected) CyanAccent else TextPrimary
+                                text = "30W - 32W High Speed • Strict Upper Ceiling (Never > 8A)",
+                                fontSize = 11.sp,
+                                color = TextSecondary
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                        }
+
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Active",
+                                tint = WarningOrange,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // =========================================================================
+            // BUTTON 2: 6 Ampere Stable (22W - 25W) - Solid Floor (Strict 6A - 8A Band)
+            // =========================================================================
+            item {
+                val isSelected = currentMode == ChargeMode.MODE_6A
+                val borderColor by animateColorAsState(
+                    targetValue = if (isSelected) CyanAccent else Color.Transparent,
+                    label = "border6A"
+                )
+
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSelected) CyanAccent.copy(alpha = 0.16f) else DarkSurface
+                    ),
+                    border = BorderStroke(2.dp, if (isSelected) CyanAccent else TextSecondary.copy(alpha = 0.15f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            currentMode = ChargeMode.MODE_6A
+                            coroutineScope.launch {
+                                val success = RootShell.applyMode(ChargeMode.MODE_6A)
+                                if (success) {
+                                    if (batteryStats.isCharging) {
+                                        NotificationHelper.showChargingNotification(context, batteryStats, ChargeMode.MODE_6A)
+                                    }
+                                    Toast.makeText(context, "⚡ 6 Ampere Stable Activated!", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(CircleShape)
+                                .background(CyanAccent.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Speed, contentDescription = null, tint = CyanAccent, modifier = Modifier.size(26.dp))
+                        }
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "6 Ampere Stable",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) CyanAccent else TextPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    color = CyanAccent.copy(alpha = 0.25f),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        "6.0A CONSTANT",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = CyanAccent,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = mode.subtitle,
+                                text = "22W - 25W Smooth Flow • Solid Floor (Strict 6A - 8A Band)",
                                 fontSize = 11.sp,
                                 color = TextSecondary
                             )
@@ -310,7 +648,7 @@ fun DashboardScreen() {
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = "Active",
                                 tint = CyanAccent,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
                     }

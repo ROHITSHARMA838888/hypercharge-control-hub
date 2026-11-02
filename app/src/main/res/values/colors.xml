@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="notif_bg">#0D1322</color>
+    <color name="notif_card_bg">#151D2E</color>
+    <color name="notif_card_border">#24324D</color>
+    <color name="notif_cyan">#00E5FF</color>
+    <color name="notif_green">#00E676</color>
+    <color name="notif_orange">#FF9100</color>
+    <color name="notif_red">#FF1744</color>
+    <color name="notif_blue">#2979FF</color>
+    <color name="notif_text_primary">#FFFFFF</color>
+    <color name="notif_text_secondary">#94A3B8</color>
+    <color name="notif_badge_bg">#18283E</color>
+</resources>

@@ -1,0 +1,6 @@
+id=hyper_charging_plus_controller
+name=Hyper Charging+ (with Control Hub Support)
+version=v1.8.0-Build8
+versionCode=180
+author=Demonx4y (App & Hooks by Rohit Sharma)
+description=Universal fast-charging governor for Xiaomi & POCO Snapdragon devices (Build 8). Features Strict 6A/8A Lock (never >8A, never <6A), Instant App-to-Daemon Synchronous Mode Switching, Notification Shade Live Telemetry, and Xiaomi MCA Direct Hardware Control.
